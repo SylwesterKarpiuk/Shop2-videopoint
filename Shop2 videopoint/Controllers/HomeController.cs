@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shop2_videopoint.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -6,11 +7,23 @@ using System.Web.Mvc;
 
 namespace Shop2_videopoint.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
-        public ActionResult Index()
+
+        public ActionResult Index(string search=null)
         {
-            return View();
+            IEnumerable<Category> model;
+
+            if (string.IsNullOrEmpty(search))
+            {
+                model = _db.Category;
+            }
+            else
+            {
+                model = _db.Category.Where(p => p.Name.Contains(search));
+            }
+
+            return View(model);
         }
 
         public ActionResult About()

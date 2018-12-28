@@ -1,0 +1,11 @@
+﻿@model Shop2_videopoint.Models.Product
+
+@{
+    ViewBag.Title = "Index";
+}
+    
+<h4>@Model.Name</h4>
+<p>
+    @Html.ActionLink("Create New", "Create", new { productId = Model.Id })
+</p>
+@Html.Partial("_Review", Model.Review)
