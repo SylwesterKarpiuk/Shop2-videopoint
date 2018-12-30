@@ -6,28 +6,41 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using Microsoft.AspNet.Identity;
 using Shop2_videopoint.Models;
+using Shop2_videopoint.ViewModels;
 
 namespace Shop2_videopoint.Controllers
 {
-    public class ProductsController : Controller
+    public class ProductsController : BaseController
     {
-        private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: Products
-        public ActionResult Index()
+        public ActionResult Index(int? categoryId = null)
         {
-            return View(db.Products.ToList());
+            IEnumerable<Product> products;
+            if (categoryId.HasValue)
+            {
+                if (_db.Category.Any(c=>c.Id == categoryId.Value))
+                {
+                    products = _db.Products.Where(p => p.CategoryId == categoryId.Value);
+                    return View(products);
+                }
+                
+            }
+            products = _db.Products;
+            return View(products);
         }
 
         // GET: Products/Details/5
+        
         public ActionResult Details(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Product product = db.Products.Find(id);
+            Product product = _db.Products.Find(id);
             if (product == null)
             {
                 return HttpNotFound();
@@ -36,9 +49,15 @@ namespace Shop2_videopoint.Controllers
         }
 
         // GET: Products/Create
+        [Authorize(Roles = "Admin")]
         public ActionResult Create()
         {
-            return View();
+            var model = new CreateProductViewModel();
+            model.Categories = _db.Category.Select(c=> new SelectListItem { Text = c.Name, Value = c.Id.ToString()});
+
+
+
+            return View(model);
         }
 
         // POST: Products/Create
@@ -46,12 +65,12 @@ namespace Shop2_videopoint.Controllers
         // Aby uzyskać więcej szczegółów, zobacz https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,Name,Description,Price")] Product product)
+        public ActionResult Create([Bind(Include = "Id,Name,Description,Price, CategoryId")] Product product)
         {
             if (ModelState.IsValid)
             {
-                db.Products.Add(product);
-                db.SaveChanges();
+                _db.Products.Add(product);
+                _db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
@@ -59,13 +78,14 @@ namespace Shop2_videopoint.Controllers
         }
 
         // GET: Products/Edit/5
+        [Authorize(Roles = "Admin")]
         public ActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Product product = db.Products.Find(id);
+            Product product = _db.Products.Find(id);
             if (product == null)
             {
                 return HttpNotFound();
@@ -82,21 +102,22 @@ namespace Shop2_videopoint.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(product).State = EntityState.Modified;
-                db.SaveChanges();
+                _db.Entry(product).State = EntityState.Modified;
+                _db.SaveChanges();
                 return RedirectToAction("Index");
             }
             return View(product);
         }
 
         // GET: Products/Delete/5
+        [Authorize(Roles = "Admin")]
         public ActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Product product = db.Products.Find(id);
+            Product product = _db.Products.Find(id);
             if (product == null)
             {
                 return HttpNotFound();
@@ -109,9 +130,9 @@ namespace Shop2_videopoint.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Product product = db.Products.Find(id);
-            db.Products.Remove(product);
-            db.SaveChanges();
+            Product product = _db.Products.Find(id);
+            _db.Products.Remove(product);
+            _db.SaveChanges();
             return RedirectToAction("Index");
         }
 
@@ -119,9 +140,32 @@ namespace Shop2_videopoint.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                _db.Dispose();
             }
             base.Dispose(disposing);
+        }
+        [Authorize]
+        public ActionResult Buy(int? id)
+        {
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+            var product = _db.Products.Find(id);
+            if (product!=null)
+            {
+                var userId = User.Identity.GetUserId();
+                var user = _db.Users.Find(userId);
+                if (user.Balance >= product.Price)
+                {
+                    user.Balance -= product.Price;
+                    user.Products.Add(product);
+                    _db.Entry(user).State = EntityState.Modified;
+                    _db.SaveChanges();
+                    return RedirectToAction("Balance","Shop");
+                }
+            }
+            return RedirectToAction("Index");
         }
     }
 }

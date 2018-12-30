@@ -7,6 +7,7 @@ using System.Web.Mvc;
 
 namespace Shop2_videopoint.Controllers
 {
+    [Authorize]
     public class ReviewController : BaseController
     {
         // GET: Review
@@ -28,9 +29,38 @@ namespace Shop2_videopoint.Controllers
         {
             if (ModelState.IsValid)
             {
+                model.Name = User.Identity.Name;
                 _db.Review.Add(model);
                 _db.SaveChanges();
                 return RedirectToAction("Index", new { id = model.ProductId });
+            }
+            return View(model);
+        }
+        public ActionResult Edit(int id)
+        {
+            var review = _db.Review.Find(id);
+            if (review.Name == User.Identity.Name)
+            {
+                if (review != null)
+                {
+                    return View(review);
+                }
+            }
+            
+            return RedirectToAction("Index","Products");
+            
+        }
+        [HttpPost]
+        public ActionResult Edit(Review model)
+        {
+            if (model.Name == User.Identity.Name)
+            {
+                if (ModelState.IsValid)
+                {
+                    _db.Entry(model).State = System.Data.Entity.EntityState.Modified;
+                    _db.SaveChanges();
+                    return RedirectToAction("Index", new { id = model.ProductId });
+                }
             }
             return View(model);
         }

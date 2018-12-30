@@ -10,16 +10,32 @@ using Shop2_videopoint.Models;
 
 namespace Shop2_videopoint.Controllers
 {
-    public class CategoriesController : Controller
+    public class CategoriesController : BaseController
     {
-        private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: Categories
         public ActionResult Index()
         {
-            return View(db.Category.ToList());
+            return View(_db.Category.ToList());
         }
+        public ActionResult GetCategoryByFilter(string search = null)
+        {
+            List<Category> model;
 
+            if (!string.IsNullOrEmpty(search))
+            {
+                model = _db.Category.Where(c => c.Name.Contains(search)).ToList();
+                var categoryIds = _db.Products.Where(p => p.Name.Contains(search)).Select(p => p.CategoryId);
+                model.AddRange(base._db.Category.Where(c => categoryIds.Contains(c.Id)));
+                model.Distinct();
+            }
+            else
+            {
+                model = base._db.Category.ToList();
+            }
+
+            return PartialView(model);
+        }
         // GET: Categories/Details/5
         public ActionResult Details(int? id)
         {
@@ -27,7 +43,7 @@ namespace Shop2_videopoint.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Category category = db.Category.Find(id);
+            Category category = _db.Category.Find(id);
             if (category == null)
             {
                 return HttpNotFound();
@@ -50,8 +66,8 @@ namespace Shop2_videopoint.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Category.Add(category);
-                db.SaveChanges();
+                _db.Category.Add(category);
+                _db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
@@ -65,7 +81,7 @@ namespace Shop2_videopoint.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Category category = db.Category.Find(id);
+            Category category = _db.Category.Find(id);
             if (category == null)
             {
                 return HttpNotFound();
@@ -82,8 +98,8 @@ namespace Shop2_videopoint.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(category).State = EntityState.Modified;
-                db.SaveChanges();
+                _db.Entry(category).State = EntityState.Modified;
+                _db.SaveChanges();
                 return RedirectToAction("Index");
             }
             return View(category);
@@ -96,7 +112,7 @@ namespace Shop2_videopoint.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Category category = db.Category.Find(id);
+            Category category = _db.Category.Find(id);
             if (category == null)
             {
                 return HttpNotFound();
@@ -109,19 +125,11 @@ namespace Shop2_videopoint.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Category category = db.Category.Find(id);
-            db.Category.Remove(category);
-            db.SaveChanges();
+            Category category = _db.Category.Find(id);
+            _db.Category.Remove(category);
+            _db.SaveChanges();
             return RedirectToAction("Index");
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
     }
 }

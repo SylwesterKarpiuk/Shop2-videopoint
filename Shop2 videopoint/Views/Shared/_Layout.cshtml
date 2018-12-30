@@ -12,6 +12,7 @@
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/custom")
+    @Scripts.Render("~/bundles/jqueryval")
 
 </head>
 <body>
@@ -28,8 +29,8 @@
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li>@Html.ActionLink("Strona główna", "Index", "Home")</li>
-                    <li>@Html.ActionLink("Informacje", "About", "Home")</li>
-                    <li>@Html.ActionLink("Kontakt", "Contact", "Home")</li>
+                    <li>@Html.ActionLink("Produkty", "Index", "Products")</li>
+                    <li>@Html.ActionLink("Kategorie", "Index", "Categories")</li>
                 </ul>
                 @Html.Partial("_LoginPartial")
             </div>

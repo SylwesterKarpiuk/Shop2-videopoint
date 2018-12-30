@@ -34,3 +34,7 @@ textarea {
 .product .price{
     float: right;
 }
+.adminLinks{
+    color:red;
+    font-weight:bold;
+}

@@ -10,20 +10,9 @@ namespace Shop2_videopoint.Controllers
     public class HomeController : BaseController
     {
 
-        public ActionResult Index(string search=null)
+        public ActionResult Index()
         {
-            IEnumerable<Category> model;
-
-            if (string.IsNullOrEmpty(search))
-            {
-                model = _db.Category;
-            }
-            else
-            {
-                model = _db.Category.Where(p => p.Name.Contains(search));
-            }
-
-            return View(model);
+            return View();
         }
 
         public ActionResult About()

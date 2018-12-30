@@ -20,6 +20,7 @@ namespace Shop2_videopoint.Models
         {
             return new ApplicationDbContext();
         }
+
     }
 
 }
